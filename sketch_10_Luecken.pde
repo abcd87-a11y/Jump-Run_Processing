@@ -1,8 +1,8 @@
 //=== HAUPTPROGRAMM ===
 Player player;
-Platform[] platforms = new Platform[3];
+Platform[] platforms = new Platform[6];  //JETZT 6 (Bodenabschnitte + Plafformen)
 Coin[] coins = new Coin[5];
-Enemy[] enemies = new Enemy[2];    //Neu: Ein Array für unsere Gegner!
+Enemy[] enemies = new Enemy[2];
 int score = 0;
 
 float groundY = 500.f;
@@ -14,9 +14,15 @@ void setup() {
   size(800, 600);
   player = new Player(100.f, height-100.f-50.f);
 
-  platforms[0] = new Platform(300.f, 400.f, 150.f, 20.f);
-  platforms[1] = new Platform(600.f, 300.f, 150.f, 20.f);
-  platforms[2] = new Platform(900.f, 200.f, 150.f, 20.f);
+  //BODENSEGMENTE (mit Lücken dazwischen)
+  platforms[0] = new Platform(0.f, groundY, 500.f, height-groundY);      //Start-Boden(0 bis 500)
+  platforms[1] = new Platform(700.f, groundY, 600.f, height-groundY);    //Zweiter Boden(700 bis 1300)
+  platforms[2] = new Platform(1500.f, groundY, 1500.f, height-groundY);  //Restlicher Boden
+
+  //HOCHPLATTFORMEN (wie gehabt)
+  platforms[3] = new Platform(300.f, 400.f, 150.f, 20.f);
+  platforms[4] = new Platform(600.f, 300.f, 150.f, 20.f);
+  platforms[5] = new Platform(900.f, 200.f, 150.f, 20.f);
 
   coins[0] = new Coin(350.f, 360.f);
   coins[1] = new Coin(650.f, 260.f);
@@ -24,16 +30,15 @@ void setup() {
   coins[3] = new Coin(1200.f, 460.f);  //Auf dem Boden
   coins[4] = new Coin(1300.f, 460.f);  //Auf dem Boden
 
-  //NEU: Gegner erstellen (X. Y, linkeGrenzen, rechteGrenzen)
-  //Ein Gegner auf dem Boden, einer auf der ersten Plattform
-  enemies[0] = new Enemy(700.f, groundY - 40.f, 500.f, 1100.f);
+  //Gegner erstellen (X. Y, linkeGrenzen, rechteGrenzen)
+  enemies[0] = new Enemy(750.f, groundY - 40.f, 700.f, 1300.f);
   enemies[1] = new Enemy(320.f, 400.f-40.f, 300.f, 430.f);
 }
 
 void draw() {
   background(135, 206, 235);
 
-  float leftMargin = width/4;
+  float leftMargin = width/4.f;
   if (player.getXPos() < cameraX + leftMargin) {
     cameraX = player.getXPos() - leftMargin;
   }
@@ -47,13 +52,12 @@ void draw() {
 
   translate(-cameraX, 0);
 
-  //Neu: Gegner an die update-Methode übernehmen
-  player.update(leftPressed, rightPressed, groundY, platforms, coins, enemies);
+  //Boden-Parameter entfällt fast, da der Boden jetzt Plattformen sind!
+  player.update(leftPressed, rightPressed, platforms, coins, enemies);
   player.draw();
 
-  fill(34, 139, 34);
-  rect(0, groundY, 3000, height - groundY);
-
+  //Den starren Boden-rect(0, groundY, 3000, ...) HABEN WIR ENTFERNT
+  //Stattdessen zeichnen sicha lle Plattformen/Bodenstücken hier:
   for (int i = 0; i < platforms.length; i++) {
     platforms[i].draw();
   }
@@ -110,15 +114,15 @@ class Player {
     }
   }
 
-  //NEU: Nimmt jetzt auch Enemy[] an
-  public void update(boolean left, boolean right, float ground, Platform[] platforms, Coin[] coins, Enemy[] enemies) {
+  //Parameter 'float ground' wurde entfernt, da der Boden jetzt Teil von 'platforms' ist
+  public void update(boolean left, boolean right, Platform[] platforms, Coin[] coins, Enemy[] enemies) {
     if (left && xPos > 0) xPos -= speed;
     if (right) xPos += speed;
 
     velocityY += gravity;
     yPos += velocityY;
 
-    //Platt-form Kollision
+    //NEU: Plattform-  &Kollision (einheitlich über das Array!)
     if (velocityY > 0) {
       for (int i = 0; i < platforms.length; i++) {
         Platform p = platforms[i];
@@ -138,39 +142,37 @@ class Player {
       if (!c.isCollected) {
         if (xPos < c.x + c.size && xPos + size > c.x &&
           yPos < c.y + c.size && yPos + size > c.y) {
-          c.isCollected = true;   //Münze "verschwindet"
-          score += 10;            //10 Punkte aufs Konto! (Greift auf die globale Variable zu)
+          c.isCollected = true;
+          score += 10;
         }
       }
     }
 
-    //NEU: Gegner-Kollision
+    //Gegner-Kollision
     for (int i = 0; i < enemies.length; i++) {
       Enemy e = enemies[i];
       if (e.isAlive) {
-        //Algemeine Überschneidung prüfen
         if (xPos < e.x + e.size && xPos + size > e.x &&
           yPos < e.y + e.size && yPos + size > e.y) {
-          //Fallen wir von OBEN auf den Gegner?
           if (velocityY > 0 && (yPos + size - velocityY) <= e.y +15.f) {
-            e.isAlive = false;                //Gegner plattmachen!
-            velocityY = jumpStrength * 0.7f;  //Kleiner Abprall-Hüpfer nach oben
+            e.isAlive = false;
+            velocityY = jumpStrength * 0.7f;
             score += 50;
           } else {
-            //Von der Seite erwischt -> Zurück zum Start! (Respawn)
+            //Respawn
             xPos = 100.f;
-            yPos = ground - size;
+            yPos = 450.f;
             velocityY = 0.f;
           }
         }
       }
     }
 
-    //Bodenkollision
-    if (yPos + size >= ground) {
-      yPos = ground - size;
+    //NEU: Abgrundprüfung! Fällt der Spieler unten aus dem Bild
+    if (yPos > height) {
+      xPos = 100.f;
+      yPos = 450.f;
       velocityY = 0.f;
-      isJumping = false;
     }
   }
 
