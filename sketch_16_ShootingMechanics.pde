@@ -3,9 +3,10 @@ Player player;
 Platform[] platforms = new Platform[6];  //(Bodenabschnitte + Plafformen)
 Coin[] coins = new Coin[5];
 Enemy[] enemies = new Enemy[2];
-Spike[] spikes = new Spike[14];  //NEU
-
+Spike[] spikes = new Spike[14];
+Bullet[] bullets = new Bullet[10]; //NEU: Magazin für 10 Schuss
 Goal goal;
+
 int score = 0;
 int lives = 3;      //wir starten mir 3 Leben
 int gameState = 0;  //0 = Spielen, 1 = Gewonnen, 2 = Game Over(NEU)
@@ -61,6 +62,11 @@ void resetGame() {
     spikes[i] = new Spike(2500.f+wert, groundY -30.f);       //Hinter dem Ziel
     wert+= 30;
   }
+
+  //NEU: Alle Kugeln im Magazin zurücksetzen
+  for (int i = 0; i < bullets.length; i++) {
+    bullets[i] = null;
+  }
 }
 
 void draw() {
@@ -82,7 +88,7 @@ void draw() {
 
     translate(-cameraX, 0);
 
-    player.update(leftPressed, rightPressed, platforms, coins, enemies, spikes, goal);
+    player.update(leftPressed, rightPressed, platforms, coins, enemies, spikes, bullets, goal);
     player.draw();
 
     for (int i = 0; i < platforms.length; i++)  platforms[i].draw();
@@ -90,6 +96,14 @@ void draw() {
     for (int i = 0; i < enemies.length; i++) {
       enemies[i].update();
       enemies[i].draw();
+    }
+
+    //NEU: Abgefeuerte Projektile fliegen lassen und zeichnen
+    for (int i = 0; i < bullets.length; i++) {
+      if (bullets[i] != null) {
+        bullets[i].update();
+        bullets[i].draw();
+      }
     }
 
     //Spikes
@@ -150,9 +164,10 @@ void keyPressed() {
   if (key == 'a' || key == 'A') leftPressed = true;
   if (key == 'd' || key == 'D') rightPressed = true;
   if (key == ' ') player.jump();
-
-  //Mit 'R' setzten wir das Spiel komplett zurück
   if (key == 'r' || key == 'R') resetGame();
+
+  //NEU: mit 'F' schießen
+  if (key =='f' || key == 'F') player.shoot(bullets);
 }
 
 void keyReleased() {
@@ -190,8 +205,19 @@ class Player {
     }
   }
 
-  //Update
-  public void update(boolean left, boolean right, Platform[] platforms, Coin[] coins, Enemy[] enemies, Spike[] spikes, Goal goal) {
+  //NEU: Schuss-Logik - sucht den nächsten frein Platz im Kugel-Array
+  public void shoot(Bullet[] bullets) {
+    for (int i = 0; i < bullets.length; i++) {
+      if (bullets[i] == null || !bullets[i].isActive) {
+        //Kugel vorne an der Hand des Spielers spawnen
+        bullets[i] = new Bullet(xPos + size, yPos + (size / 2.f) - 5.f);
+        break;  //Nur EIne Kugel pro Tastendruck abfeuern!
+      }
+    }
+  }
+
+  //NEU: Signatur erweiter um Bullet[] bullets
+  public void update(boolean left, boolean right, Platform[] platforms, Coin[] coins, Enemy[] enemies, Spike[] spikes, Bullet[] bullets, Goal goal) {
     //Bewegung
     if (left && xPos > 0) xPos -= speed;
     if (right) xPos += speed;
@@ -251,7 +277,26 @@ class Player {
       }
     }
 
-    //NEU: Stachel-Kollision (Overlap)
+    //NEU: Projektil-Kollision mit Gegnern
+    for (int i = 0; i < bullets.length; i++) {
+      Bullet b = bullets[i];
+      if (b !=null && b.isActive) {
+        for (int j = 0; j < enemies.length; j++) {
+          Enemy e = enemies[j];
+          if (e.isAlive) {
+            //AABB-Overlap: Trifft Kugel den Gengner?
+            if (b.x < e.x + e.size && b.x + b.size > e.x &&
+              b.y < e.y + e.size && b.y + b.size > e.y) {
+              e.isAlive = false;    //Gegner schalten wir aus
+              b.isActive = false;   //Kugel verschwindet
+              score += 50;
+            }
+          }
+        }
+      }
+    }
+
+    //Stachel-Kollision (Overlap)
     for (int i = 0; i < spikes.length; i++) {
       Spike s = spikes[i];
       if (xPos < s.x + s.w && xPos + size > s.x &&
@@ -389,7 +434,7 @@ class Goal {
   }
 }
 
-//NEU: Die Stachel-Klasse (statische Falle)
+//Die Stachel-Klasse (statische Falle)
 class Spike {
   float x, y;
   float w = 30.f;  //Breite
@@ -404,5 +449,29 @@ class Spike {
     fill(120);    //Grau wie Eisen/Metall
     //Ein Dreieck mit der Spitze nach oben: (x1, y1, x2, y2, x3 ,y3)
     triangle(x, y + h, x + w /2.f, y, x +w, y + h);
+  }
+}
+
+class Bullet {
+  float x, y;
+  float size = 10.f;
+  float speed = 10.f; //fliegt flott nach rechts
+  boolean isActive = true;
+
+  public Bullet(float startX, float startY) {
+    this.x = startX;
+    this.y = startY;
+  }
+
+  public void update() {
+    if (!isActive) return;
+    x += speed; //Kugel bewegt sich horizontal
+  }
+
+  public void draw() {
+    if (isActive) {
+      fill(255, 140, 0);
+      rect(x, y, size, size);
+    }
   }
 }
