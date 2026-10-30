@@ -3,9 +3,10 @@ Player player;
 Platform[] platforms = new Platform[6];  //(Bodenabschnitte + Plafformen)
 Coin[] coins = new Coin[5];
 Enemy[] enemies = new Enemy[2];
-Goal goal;          //NEU: Unser Ziel-Objekt
+Goal goal;
 int score = 0;
-int gameState = 0;  //NEU: 0 = Spielen, 1 = Gewonen
+int lives = 3;      //Neu: wir starten mir 3 Leben
+int gameState = 0;  //0 = Spielen, 1 = Gewonnen, 2 = Game Over(NEU)
 
 float groundY = 500.f;
 boolean leftPressed = false;
@@ -31,21 +32,21 @@ void setup() {
   coins[1] = new Coin(650.f, 260.f);
   coins[2] = new Coin(950.f, 160.f);
   coins[3] = new Coin(1200.f, 460.f);  //Auf dem Boden
-  coins[4] = new Coin(1300.f, 460.f);  //Auf dem Boden
+  coins[4] = new Coin(1300.f, 460.f);
 
   //Gegner
   enemies[0] = new Enemy(750.f, groundY - 40.f, 700.f, 1300.f);  //(X. Y, linkeGrenzen, rechteGrenzen)
   enemies[1] = new Enemy(320.f, 400.f-40.f, 300.f, 430.f);
 
-  //NEU: Das Ziel ganz ans Ende der Map stellen (bei x = 2500)
+  //Ziel
   goal = new Goal(2500.f, groundY  - 100.f);
 }
 
 void draw() {
   background(135, 206, 235);
 
-  //NEU: Logik unterscheiden je nach Spielstand
-  if (gameState == 0) {
+
+  if (gameState == 0) {    //Spielen
     //Normale SPIEL-Logik
     float leftMargin = width/4.f;
     if (player.getXPos() < cameraX + leftMargin) {
@@ -60,7 +61,6 @@ void draw() {
 
     translate(-cameraX, 0);
 
-    //Ziel an den Player übergeben
     player.update(leftPressed, rightPressed, platforms, coins, enemies, goal);
     player.draw();
 
@@ -71,12 +71,18 @@ void draw() {
       enemies[i].draw();
     }
 
-    goal.draw();  //Flagge zeichnen
+    goal.draw();
 
+    //UsetInterface(UI): Score zeichnen
     fill(0);
     textSize(24);
-    text("Score: " + score, cameraX +20, 40);
-  } else if (gameState == 1) {  //Gewonnen-Bildschirm
+    text("Score: " + score, cameraX + 20, 40);
+    //NEU: UI für Leben zeichnen (3 rote Quadrate/Herzen obren rechts)
+    fill(220, 20, 60);
+    for (int i = 0; i < lives; i++) {
+      rect(cameraX + width - 120 + (i*30), 20, 20, 20);
+    }
+  } else if (gameState == 1) {  //GEWONNEN
     //Kamera beibehalten
     translate(-cameraX, 0);
 
@@ -92,8 +98,16 @@ void draw() {
     text("LEVEL GESCHAFFT", cameraX + width / 2.f, height / 2.f -30 );
     textSize(24);
     text("Endscore: " + score, cameraX + width / 2.f, height/2.f +30);
-
     //Textausrichtung zurücksetzen
+    textAlign(LEFT, BASELINE);
+  } else if (gameState == 2) {    //NEU: GAME OVER
+    translate(-cameraX, 0);
+    for (int i = 0; i < platforms.length; i++) platforms[i].draw();
+
+    fill(200, 0, 0);  //Knallrot
+    textAlign(CENTER, CENTER);
+    textSize(48);
+    text("GAME OVER", cameraX + width / 2.f, height / 2.f);
     textAlign(LEFT, BASELINE);
   }
 }
@@ -171,31 +185,40 @@ class Player {
       }
     }
 
-    //Gegner-Kollision
+    //NEU: HIER ÄNDERUNG IN Gegner-Kollision
     for (int i = 0; i < enemies.length; i++) {
       Enemy e = enemies[i];
       if (e.isAlive) {
         if (xPos < e.x + e.size && xPos + size > e.x &&
           yPos < e.y + e.size && yPos + size > e.y) {
-          if (velocityY > 0 && (yPos + size - velocityY) <= e.y +15.f) {
+          if (velocityY > 0 && (yPos + size - velocityY) <= e.y +15.f) {    //Denk drann Y steht aufm kopf, deshalb velocityY > 0 und  <= e.y + 15.f: Lag im letzten Frame noch über/auf der Oberkante des Gegners
             e.isAlive = false;
             velocityY = jumpStrength * 0.7f;
             score += 50;
           } else {
-            //Respawn
-            xPos = 100.f;
-            yPos = 450.f;
-            velocityY = 0.f;
+            //NEU: Leben abziehen & Respawn / Game Over
+            lives--;
+            if (lives <= 0) {
+              gameState = 2;  //Game Over!
+            } else {
+              xPos = 100.f;
+              yPos = 450.f;
+              velocityY = 0.f;
+            }
           }
         }
       }
     }
-
-    //Abgrundprüfung!
+    //NEU: ÄNDERUNG IN Abgrundprüfung!
     if (yPos > height) {
-      xPos = 100.f;
-      yPos = 450.f;
-      velocityY = 0.f;
+      lives--;  //NEU: Auch der Abgrund kostet 1 Leben!
+      if (lives <= 0) {
+        gameState = 2;  //Game Over!
+      } else {
+        xPos = 100.f;
+        yPos = 450.f;
+        velocityY = 0.f;
+      }
     }
 
     //NEU: Ziel-Kollision prüfen
