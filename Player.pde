@@ -35,7 +35,7 @@ class Player extends GameObject {
   }
 
   //Signatur erweiter um Bullet[] bullets
-  public void update(boolean left, boolean right, Platform[] platforms, Coin[] coins, Enemy[] enemies, Spike[] spikes, Bullet[] bullets, Goal goal) {
+  public void update(boolean left, boolean right, Platform[] platforms, Coin[] coins, Enemy[] enemies, FlyingEnemy[] flyers, Spike[] spikes, Bullet[] bullets, Goal goal) {
     //Bewegung
     if (left && x > 0) x -= speed;
     if (right) x += speed;
@@ -88,6 +88,20 @@ class Player extends GameObject {
         }
       }
     }
+    //NEU: Fliegende Gegner vs. Player (Berührung = Verletzung, kein Kopfsprung)
+    for (int i = 0; i < flyers.length; i++) {
+      FlyingEnemy f  = flyers[i];
+      if (f.isAlive && this.touches(f)) {
+        lives--;
+        if (lives <= 0) {
+          gameState = 2;  //Game Over
+        } else {
+          x = 100.f;
+          y = 450.f;
+          velocityY = 0.f;
+        }
+      }
+    }
 
     //Projektile vs Gegner (Kugel <-> Gegner mit touches())
     for (int i = 0; i < bullets.length; i++) {
@@ -99,6 +113,21 @@ class Player extends GameObject {
             e.isAlive = false;    //Gegner schalten wir aus
             b.isActive = false;   //Kugel verschwindet
             score += 50;
+          }
+        }
+      }
+    }
+
+    //NEU: Projektile vs. fliegende Gegner
+    for (int i = 0; i < bullets.length; i++) {
+      Bullet b = bullets[i];
+      if (b != null && b.isActive) {
+        for (int j = 0; j < flyers.length; j++) {
+          FlyingEnemy f = flyers[j];
+          if (f.isAlive && b.touches(f)) {
+            f.isAlive = false;
+            b.isActive = false;
+            score += 75;
           }
         }
       }

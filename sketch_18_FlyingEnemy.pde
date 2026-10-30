@@ -3,6 +3,7 @@ Player player;
 Platform[] platforms = new Platform[6];  //(Bodenabschnitte + Plafformen)
 Coin[] coins = new Coin[5];
 Enemy[] enemies = new Enemy[2];
+FlyingEnemy[] flyers = new FlyingEnemy[1];    //NEU
 Spike[] spikes = new Spike[14];
 Bullet[] bullets = new Bullet[10];
 Goal goal;
@@ -51,6 +52,9 @@ void resetGame() {
   enemies[0] = new Enemy(750.f, groundY - 40.f, 700.f, 1300.f);  //(X. Y, linkeGrenzen, rechteGrenzen)
   enemies[1] = new Enemy(320.f, 400.f-40.f, 300.f, 450.f);
 
+  //NEU Fliegende Gegner in der Luft platzieren (fliegt zwischen Y = 150 und Y = 350)
+  flyers[0] = new FlyingEnemy(1100.f, 250.f, 150.f, 350.f);
+
   //Ziel
   goal = new Goal(2500.f, groundY  - 100.f);
 
@@ -88,14 +92,22 @@ void draw() {
 
     translate(-cameraX, 0);
 
-    player.update(leftPressed, rightPressed, platforms, coins, enemies, spikes, bullets, goal);
+    player.update(leftPressed, rightPressed, platforms, coins, enemies, flyers, spikes, bullets, goal);
     player.draw();
 
+
+    //Enemies
     for (int i = 0; i < platforms.length; i++)  platforms[i].draw();
     for (int i = 0; i < coins.length; i++) coins[i].draw();
     for (int i = 0; i < enemies.length; i++) {
       enemies[i].update();
       enemies[i].draw();
+    }
+
+    //Flying Enemies
+    for (int i = 0; i < flyers.length; i++) {
+      flyers[i].update();
+      flyers[i].draw();
     }
 
     //Abgefeuerte Projektile fliegen lassen und zeichnen
