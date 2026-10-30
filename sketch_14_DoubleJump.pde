@@ -5,7 +5,7 @@ Coin[] coins = new Coin[5];
 Enemy[] enemies = new Enemy[2];
 Goal goal;
 int score = 0;
-int lives = 3;      //Neu: wir starten mir 3 Leben
+int lives = 3;      //wir starten mir 3 Leben
 int gameState = 0;  //0 = Spielen, 1 = Gewonnen, 2 = Game Over(NEU)
 
 float groundY = 500.f;
@@ -15,10 +15,10 @@ float cameraX = 0.f;
 
 void setup() {
   size(800, 600);
-  resetGame();    //NEU: Wir rufen einfach unsere Reset-Funktion auf!
+  resetGame();    //Wir rufen einfach unsere Reset-Funktion auf!
 }
 
-//NEU: Eine eigene Methode, die alles auf den Startpunkt zurücksetzt
+//Auf Startpunkt zurücksetzen
 void resetGame() {
   score = 0;
   lives = 3;
@@ -108,7 +108,7 @@ void draw() {
     textSize(24);
     text("Endscore: " + score, cameraX + width / 2.f, height/2.f +30);
 
-    //NEU: Hinweis für Neustart
+    //Hinweis für Neustart
     fill(0);
     text("Drücke 'R' für Neustart", cameraX + width / 2.f, height / 2.f + 50);
     //Textausrichtung zurücksetzen
@@ -122,7 +122,7 @@ void draw() {
     textSize(48);
     text("GAME OVER", cameraX + width / 2.f, height / 2.f);
 
-    //NEU: Hinweis für Neustart
+    //Hinweis für Neustart
     fill(0);
     textSize(24);
     text("Drücke 'R' für Neustart", cameraX + width / 2.f, height / 2.f +30);
@@ -134,9 +134,9 @@ void keyPressed() {
   if (key == 'a' || key == 'A') leftPressed = true;
   if (key == 'd' || key == 'D') rightPressed = true;
   if (key == ' ') player.jump();
-  
+
   //NEU: Mit 'R' setzten wir das Spiel komplett zurück
-  if(key == 'r' || key == 'R') resetGame();
+  if (key == 'r' || key == 'R') resetGame();
 }
 
 void keyReleased() {
@@ -152,7 +152,10 @@ class Player {
   private float velocityY = 0.f;
   private float gravity = 0.5f;
   private float jumpStrength = -12.f;
-  private boolean isJumping = false;
+
+  //NEU: Sprung-Zähler für Doppelsprung
+  private int jumpCount = 0;
+  private int maxJumps = 2;
 
   public Player(float startX, float startY) {
     this.xPos = startX;
@@ -163,14 +166,15 @@ class Player {
     return this.xPos;
   }
 
+  //NEU: Die jump()-Methode erlaubt Sprünge, solange jumpCount < maxJumps ist!
   public void jump() {
-    if (!isJumping) {
-      velocityY = jumpStrength;
-      isJumping = true;
+    if (jumpCount < maxJumps) {
+      velocityY = jumpStrength;  //Impuls nach oben
+      jumpCount++;               //Zähler hochzählen (1 = BodenSprung, 2 = LuftSprung
     }
   }
 
-  //Angepasste Update-Signaur
+  //Update
   public void update(boolean left, boolean right, Platform[] platforms, Coin[] coins, Enemy[] enemies, Goal goal) {
     //Bewegung
     if (left && xPos > 0) xPos -= speed;
@@ -188,7 +192,7 @@ class Player {
           if (yPos + size >= p.y && yPos + size - velocityY <= p.y) {
             yPos = p.y - size;
             velocityY = 0.f;
-            isJumping = false;
+            jumpCount = 0; //NEU: Auf der Plattform landen setzt die Sprünge auf 0 zurück
           }
         }
       }
@@ -206,7 +210,7 @@ class Player {
       }
     }
 
-    //NEU: HIER ÄNDERUNG IN Gegner-Kollision
+    //Gegner-Kollision
     for (int i = 0; i < enemies.length; i++) {
       Enemy e = enemies[i];
       if (e.isAlive) {
@@ -230,19 +234,20 @@ class Player {
         }
       }
     }
-    //NEU: ÄNDERUNG IN Abgrundprüfung!
+    //Boden-Kollision für Abrung-Respawn / Boden
     if (yPos > height) {
-      lives--;  //NEU: Auch der Abgrund kostet 1 Leben!
+      lives--;  //Auch der Abgrund kostet 1 Leben!
       if (lives <= 0) {
         gameState = 2;  //Game Over!
       } else {
         xPos = 100.f;
         yPos = 450.f;
         velocityY = 0.f;
+        jumpCount = 0;   //NEU: Beim Respawn den Zähler zurücksetzten
       }
     }
 
-    //NEU: Ziel-Kollision prüfen
+    //Ziel-Kollision prüfen
     if (xPos < goal.x + goal.w &&xPos + size > goal.x &&
       yPos < goal.y + goal.h &&yPos + size > goal.y) {
       gameState = 1;
@@ -326,7 +331,7 @@ class Enemy {
   }
 }
 
-//NEU: Die Goal-Klasse für die Ziel-Flagge
+//Die Goal-Klasse für die Ziel-Flagge
 class Goal {
   float x, y;
   float w = 40.f;
