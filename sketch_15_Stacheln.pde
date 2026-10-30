@@ -3,6 +3,8 @@ Player player;
 Platform[] platforms = new Platform[6];  //(Bodenabschnitte + Plafformen)
 Coin[] coins = new Coin[5];
 Enemy[] enemies = new Enemy[2];
+Spike[] spikes = new Spike[14];  //NEU
+
 Goal goal;
 int score = 0;
 int lives = 3;      //wir starten mir 3 Leben
@@ -50,6 +52,15 @@ void resetGame() {
 
   //Ziel
   goal = new Goal(2500.f, groundY  - 100.f);
+
+  //Spikes
+  spikes[0] = new Spike(400.f, groundY - 30.f);    //Stachel auf dem ersten Boden
+  spikes[1] = new Spike(700.f, 300.f -30.f);       //Zweite auf ersten Block
+  float wert = 30.f;
+  for (int i = 2; i <14; i++) {
+    spikes[i] = new Spike(2500.f+wert, groundY -30.f);       //Hinter dem Ziel
+    wert+= 30;
+  }
 }
 
 void draw() {
@@ -71,7 +82,7 @@ void draw() {
 
     translate(-cameraX, 0);
 
-    player.update(leftPressed, rightPressed, platforms, coins, enemies, goal);
+    player.update(leftPressed, rightPressed, platforms, coins, enemies, spikes, goal);
     player.draw();
 
     for (int i = 0; i < platforms.length; i++)  platforms[i].draw();
@@ -81,13 +92,18 @@ void draw() {
       enemies[i].draw();
     }
 
+    //Spikes
+    for (int i = 0; i < spikes.length; i++) {
+      spikes[i].draw();
+    }
+
     goal.draw();
 
     //UsetInterface(UI): Score zeichnen
     fill(0);
     textSize(24);
     text("Score: " + score, cameraX + 20, 40);
-    //NEU: UI für Leben zeichnen (3 rote Quadrate/Herzen obren rechts)
+    //UI für Leben zeichnen (3 rote Quadrate/Herzen obren rechts)
     fill(220, 20, 60);
     for (int i = 0; i < lives; i++) {
       rect(cameraX + width - 120 + (i*30), 20, 20, 20);
@@ -135,7 +151,7 @@ void keyPressed() {
   if (key == 'd' || key == 'D') rightPressed = true;
   if (key == ' ') player.jump();
 
-  //NEU: Mit 'R' setzten wir das Spiel komplett zurück
+  //Mit 'R' setzten wir das Spiel komplett zurück
   if (key == 'r' || key == 'R') resetGame();
 }
 
@@ -153,7 +169,7 @@ class Player {
   private float gravity = 0.5f;
   private float jumpStrength = -12.f;
 
-  //NEU: Sprung-Zähler für Doppelsprung
+  //Sprung-Zähler für Doppelsprung
   private int jumpCount = 0;
   private int maxJumps = 2;
 
@@ -166,7 +182,7 @@ class Player {
     return this.xPos;
   }
 
-  //NEU: Die jump()-Methode erlaubt Sprünge, solange jumpCount < maxJumps ist!
+  //Die jump()-Methode erlaubt Sprünge, solange jumpCount < maxJumps ist!
   public void jump() {
     if (jumpCount < maxJumps) {
       velocityY = jumpStrength;  //Impuls nach oben
@@ -175,7 +191,7 @@ class Player {
   }
 
   //Update
-  public void update(boolean left, boolean right, Platform[] platforms, Coin[] coins, Enemy[] enemies, Goal goal) {
+  public void update(boolean left, boolean right, Platform[] platforms, Coin[] coins, Enemy[] enemies, Spike[] spikes, Goal goal) {
     //Bewegung
     if (left && xPos > 0) xPos -= speed;
     if (right) xPos += speed;
@@ -192,7 +208,7 @@ class Player {
           if (yPos + size >= p.y && yPos + size - velocityY <= p.y) {
             yPos = p.y - size;
             velocityY = 0.f;
-            jumpCount = 0; //NEU: Auf der Plattform landen setzt die Sprünge auf 0 zurück
+            jumpCount = 0; //Auf der Plattform landen setzt die Sprünge auf 0 zurück
           }
         }
       }
@@ -221,7 +237,7 @@ class Player {
             velocityY = jumpStrength * 0.7f;
             score += 50;
           } else {
-            //NEU: Leben abziehen & Respawn / Game Over
+            //Leben abziehen & Respawn / Game Over
             lives--;
             if (lives <= 0) {
               gameState = 2;  //Game Over!
@@ -234,6 +250,26 @@ class Player {
         }
       }
     }
+
+    //NEU: Stachel-Kollision (Overlap)
+    for (int i = 0; i < spikes.length; i++) {
+      Spike s = spikes[i];
+      if (xPos < s.x + s.w && xPos + size > s.x &&
+        yPos < s.y + s.h && yPos + size > s.y) {
+        //Treffer Leben abziehen und Respawn
+        lives--;
+        if (lives <= 0) {
+          gameState = 2;  //Game over
+        } else {
+          xPos = 100.f;
+          yPos = 450.f;
+          velocityY = 0.f;
+          jumpCount = 0;
+        }
+      }
+    }
+
+
     //Boden-Kollision für Abrung-Respawn / Boden
     if (yPos > height) {
       lives--;  //Auch der Abgrund kostet 1 Leben!
@@ -243,7 +279,7 @@ class Player {
         xPos = 100.f;
         yPos = 450.f;
         velocityY = 0.f;
-        jumpCount = 0;   //NEU: Beim Respawn den Zähler zurücksetzten
+        jumpCount = 0;  //Beim Respawn den Zähler zurücksetzten
       }
     }
 
@@ -350,5 +386,23 @@ class Goal {
     //Tuch/Flagge (Grün)
     fill(0, 200, 0);
     triangle(x +10.f, y, x + 40.f, y + 20.f, x + 10.f, y +40.f);
+  }
+}
+
+//NEU: Die Stachel-Klasse (statische Falle)
+class Spike {
+  float x, y;
+  float w = 30.f;  //Breite
+  float h = 30.f;  //Höhe
+
+  public Spike(float x, float y) {
+    this.x = x;
+    this.y = y;
+  }
+
+  public void draw() {
+    fill(120);    //Grau wie Eisen/Metall
+    //Ein Dreieck mit der Spitze nach oben: (x1, y1, x2, y2, x3 ,y3)
+    triangle(x, y + h, x + w /2.f, y, x +w, y + h);
   }
 }
