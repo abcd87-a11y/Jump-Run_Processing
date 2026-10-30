@@ -15,6 +15,16 @@ float cameraX = 0.f;
 
 void setup() {
   size(800, 600);
+  resetGame();    //NEU: Wir rufen einfach unsere Reset-Funktion auf!
+}
+
+//NEU: Eine eigene Methode, die alles auf den Startpunkt zurücksetzt
+void resetGame() {
+  score = 0;
+  lives = 3;
+  gameState = 0;
+  cameraX = 0.f;
+
   player = new Player(100.f, height-100.f-50.f);
 
   //BODENSEGMENTE (mit Lücken dazwischen)
@@ -36,7 +46,7 @@ void setup() {
 
   //Gegner
   enemies[0] = new Enemy(750.f, groundY - 40.f, 700.f, 1300.f);  //(X. Y, linkeGrenzen, rechteGrenzen)
-  enemies[1] = new Enemy(320.f, 400.f-40.f, 300.f, 430.f);
+  enemies[1] = new Enemy(320.f, 400.f-40.f, 300.f, 450.f);
 
   //Ziel
   goal = new Goal(2500.f, groundY  - 100.f);
@@ -85,7 +95,6 @@ void draw() {
   } else if (gameState == 1) {  //GEWONNEN
     //Kamera beibehalten
     translate(-cameraX, 0);
-
     //Welt im Hintergrund zeichnen
     for (int i = 0; i < platforms.length; i++) platforms[i].draw();
     goal.draw();
@@ -98,16 +107,25 @@ void draw() {
     text("LEVEL GESCHAFFT", cameraX + width / 2.f, height / 2.f -30 );
     textSize(24);
     text("Endscore: " + score, cameraX + width / 2.f, height/2.f +30);
+
+    //NEU: Hinweis für Neustart
+    fill(0);
+    text("Drücke 'R' für Neustart", cameraX + width / 2.f, height / 2.f + 50);
     //Textausrichtung zurücksetzen
     textAlign(LEFT, BASELINE);
-  } else if (gameState == 2) {    //NEU: GAME OVER
+  } else if (gameState == 2) {    //GAME OVER
     translate(-cameraX, 0);
     for (int i = 0; i < platforms.length; i++) platforms[i].draw();
 
-    fill(200, 0, 0);  //Knallrot
+    fill(200, 0, 0);
     textAlign(CENTER, CENTER);
     textSize(48);
     text("GAME OVER", cameraX + width / 2.f, height / 2.f);
+
+    //NEU: Hinweis für Neustart
+    fill(0);
+    textSize(24);
+    text("Drücke 'R' für Neustart", cameraX + width / 2.f, height / 2.f +30);
     textAlign(LEFT, BASELINE);
   }
 }
@@ -116,6 +134,9 @@ void keyPressed() {
   if (key == 'a' || key == 'A') leftPressed = true;
   if (key == 'd' || key == 'D') rightPressed = true;
   if (key == ' ') player.jump();
+  
+  //NEU: Mit 'R' setzten wir das Spiel komplett zurück
+  if(key == 'r' || key == 'R') resetGame();
 }
 
 void keyReleased() {
