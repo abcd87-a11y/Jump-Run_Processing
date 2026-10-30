@@ -8,6 +8,11 @@ class Player extends GameObject {
   private int jumpCount = 0;
   private int maxJumps = 2;
 
+  //NEU: Blickrichtung und Schuss-Cooldown
+  private boolean facingRight = true;
+  private int shootCooldown = 0;
+  private int cooldownTime = 15;  //15 Frames Pause zwischen den Schüssen (~0.25 Sek)
+
   public Player(float startX, float startY) {
     super(startX, startY, 50.f, 50.f);
   }
@@ -23,22 +28,42 @@ class Player extends GameObject {
     }
   }
 
-  //Schuss-Logik - sucht den nächsten frein Platz im Kugel-Array
+  //NEU: Schießen mit Blickrichtung und Cooldown
   public void shoot(Bullet[] bullets) {
+    if (shootCooldown > 0) return;  //Noch am Nachladen
+
     for (int i = 0; i < bullets.length; i++) {
       if (bullets[i] == null || !bullets[i].isActive) {
-        //Kugel vorne an der Hand des Spielers spawnen
-        bullets[i] = new Bullet(x + w, y + (h / 2.f) - 5.f);
-        break;  //Nur EIne Kugel pro Tastendruck abfeuern!
+        //Nach rechts schießen
+        if (facingRight) {
+          bullets[i] = new Bullet(x + w, y + (h / 2.f) - 5.f, 10.f);
+        }
+        //Nach links schießen
+        else {
+          bullets[i] = new Bullet(x-10.f, y + (h / 2.f) - 5.f, -10.f);
+        }
+        shootCooldown = cooldownTime; //Cooldown starten
+        break;
       }
     }
   }
 
   //Signatur erweiter um Bullet[] bullets
   public void update(boolean left, boolean right, Platform[] platforms, Coin[] coins, Enemy[] enemies, FlyingEnemy[] flyers, Spike[] spikes, Bullet[] bullets, Goal goal) {
-    //Bewegung
-    if (left && x > 0) x -= speed;
-    if (right) x += speed;
+    //NEU: Blickrichtung beim Laufen aktualisieren
+    if (left && x > 0) {
+      x-= speed;
+      facingRight = false; //Schaut nach links
+    }
+    if (right) {
+      x += speed;
+      facingRight = true;  //Schaut nach rechts
+    }
+
+    //NEU: Cooldown herunterzählen
+    if (shootCooldown > 0) {
+      shootCooldown--;
+    }
 
     //Sprung
     velocityY += gravity;

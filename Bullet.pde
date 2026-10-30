@@ -1,14 +1,21 @@
 class Bullet extends GameObject {
-  float speed = 10.f; //fliegt flott nach rechts
+  float speedX = 10.f; //Positiv nach rechts, Negativ nach links
   boolean isActive = true;
 
-  public Bullet(float startX, float startY) {
+  public Bullet(float startX, float startY, float speedX) {
     super(startX, startY, 10.f, 10.f);
+    this.speedX = speedX;
   }
 
-  public void update() {
+
+  //NEU: Nimmt cameraX entgegen, um den Bildschimrand korrekt zu prüfen
+  public void update(float cameraX) {
     if (!isActive) return;
-    x += speed; //Kugel bewegt sich horizontal
+
+    x += speedX; //Kugel bewegt sich horizontal
+
+    //Kugel löschen, wenn sie links oder rechts aus dem sichtbaren Bild fliegt
+    if (x > cameraX + width + 100 || x < cameraX - 100) isActive = false;
   }
 
   public void draw() {

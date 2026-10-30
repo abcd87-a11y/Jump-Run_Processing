@@ -111,9 +111,10 @@ void draw() {
     }
 
     //Abgefeuerte Projektile fliegen lassen und zeichnen
+    //NEU: Bullets mit cameraX updaten
     for (int i = 0; i < bullets.length; i++) {
       if (bullets[i] != null) {
-        bullets[i].update();
+        bullets[i].update(cameraX);  //cameraX wird mitgegeben
         bullets[i].draw();
       }
     }
