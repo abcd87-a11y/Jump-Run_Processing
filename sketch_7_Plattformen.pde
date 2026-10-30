@@ -1,15 +1,20 @@
 //=== HAUPTPROGRAMM ===
 Player player;
+Platform[] platforms = new Platform[3]; //Ein Array für unsere Plattformen!
 float groundY = 500.f;
 boolean leftPressed = false;
 boolean rightPressed = false;
-
-//NEU: Eine Variable für unsere Kamera-Verschiebung
 float cameraX = 0.f;
 
 void setup() {
   size(800, 600);
-  player = new Player(100.f, height-100.f-50.f);    //100 sind die Bodenhöhe, und 50 die Spielerhöhe
+  player = new Player(100.f, height-100.f-50.f);
+
+  //Wir erstellen 3 Plattformen wie eine kleine Treppe
+  //new Platform(x,y, breite, höhe)
+  platforms[0] = new Platform(300.f, 400.f, 150.f, 20.f);
+  platforms[1] = new Platform(600.f, 300.f, 150.f, 20.f);
+  platforms[2] = new Platform(900.f, 200.f, 150.f, 20.f);
 }
 
 void draw() {
@@ -17,7 +22,6 @@ void draw() {
 
   //Neu: Kamera berechnen. Sie soll den Spieler in der Mitte halten.
   //Wir ziehen die halbe bzw. auf 3.f geändert Bildschirmbreite ab, damit der Spieler zentriert ist
-
   float leftMargin = width/4;
   if (player.getXPos() < cameraX + leftMargin) {
     // Kamera schiebt sich sanft mit, statt zu springen
@@ -29,26 +33,23 @@ void draw() {
   if (player.getXPos() > cameraX + rightMargin) {
     cameraX = player.getXPos() - rightMargin;
   }
-
-  //Die Kamera soll am linken Rand stoppen (damit man nicht links aus der Welt läuft)
   if (cameraX < 0) cameraX = 0;
 
-  //NEU: Wir verschieben das gesamte Koordinatensystem nach links (daher -camerX)
-  //Alles, was ab hier gezeichnet wird, ist Teil der großen Welt!
-  translate(-cameraX, 0);  //Bsp Spieler ist 1000 - cameraX = position der Spielwelt
 
-  player.update(leftPressed, rightPressed, groundY);
+  translate(-cameraX, 0);
+
+  //Neu: Wir übergen das Plattform-Array an den Spieler damit er übeprüfen kann, ob er darauf steht
+  player.update(leftPressed, rightPressed, groundY, platforms);
   player.draw();
 
-  //Boden zeichnen (NEU: Jetzt 3000 Pixel breit statt "width")
+  //Boden zeichnen
   fill(34, 139, 34);
   rect(0, groundY, 3000, height - groundY);
 
-  //Neu: Ein paar Hindernisse/Bäume als Orientierung in der großen Welt
-  fill(139, 69, 19);  //braun
-  rect(600, groundY - 80, 40, 80);
-  rect(1200, groundY - 120, 60, 120);
-  rect(2200, groundY - 60, 30, 60);
+  //Neu: Alle Plattformen zeichnen
+  for (int i = 0; i < platforms.length; i++) {
+    platforms[i].draw();
+  }
 }
 
 void keyPressed() {
@@ -78,7 +79,6 @@ class Player {
     this.yPos = startY;
   }
 
-  //NEU: Der Getter, damit das Hauptprogramm die Position für die Kamera lesen darf
   public float getXPos() {
     return this.xPos;
   }
@@ -90,18 +90,36 @@ class Player {
     }
   }
 
-  public void update(boolean left, boolean right, float ground) {
+  //Neu: Die Methode fordert jetzt das Array der Plattform an
+  public void update(boolean left, boolean right, float ground, Platform[] platforms) {
     //1. Horizontale Logik
     if (left && xPos > 0) xPos -= speed;
-
-    //Änderung: Der Spieler kann jetzt nach rechts laufen ( < width wurde entfernt)
     if (right) xPos += speed;
 
     //2. Vertikale Logik
     velocityY += gravity;
     yPos += velocityY;
 
-    //3 Bodenkollision
+    //3. NEU: Plattform-Kollision
+    if (velocityY > 0) { //Wir prüfen nur, wenn wir nach UNTEN fallen
+      for (int i = 0; i < platforms.length; i++) {
+        Platform p = platforms[i];
+
+        //Prüfen: Sind wir horizontal im Bereich der Plattform?
+        if (xPos + size > p.x && xPos < p.x + p.w) {
+          //Prüfen: Steckt unsere Unterkante jetzt IN oder UNTER der Plattform...
+          //...UND war sie im letzten Frame noch ÜBER der Plattform?
+          //(yPos - velocityY rechnet quasi einen Fame in der Zeit zurück)
+          if (yPos + size >= p.y && yPos + size - velocityY <= p.y) {
+            yPos = p.y - size; //Exakt auf die Plattform setzen
+            velocityY = 0.f;
+            isJumping = false;
+          }
+        }
+      }
+    }
+
+    //4. Bodenkollision
     if (yPos + size >= ground) {
       yPos = ground - size;
       velocityY = 0.f;
@@ -115,19 +133,20 @@ class Player {
   }
 }
 
-/*
-// Ohne translate müssten wir das hier machen:
- 
- // Spieler zeichnen
- rect(player.getXPos() - cameraX, player.getYPos(), 50, 50);
- 
- // Baum 1
- rect(600 - cameraX, groundY - 80, 40, 80);
- 
- // Baum 2
- rect(1200 - cameraX, groundY - 120, 60, 120);
- 
- // Baum 3
- rect(2200 - cameraX, groundY - 60, 30, 60);
- 
- */
+//NEU: Die Plattform-Klasse
+class Platform {
+  //Damit der Player leicht darauf zugreifen kann, lassen wir die Attribute hier mal package-privte (ohne private/public)
+  float x, y, w, h;
+
+  public Platform(float x, float y, float w, float h) {
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+  }
+
+  public void draw() {
+    fill(139, 69, 19);  //Braun wie Holzbretter
+    rect(x, y, w, h);
+  }
+}
