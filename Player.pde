@@ -1,8 +1,9 @@
 class Player extends GameObject {
-  private float speed = 5.f;
+  //Werte jetzt skaliert auf SEL-Einheiten (pro Sekunde)
+  private float speed = 300.f;
   private float velocityY = 0.f;
-  private float gravity = 0.5f;
-  private float jumpStrength = -12.f;
+  private float gravity = 1200.f;
+  private float jumpStrength = -550.f;
 
   //Sprung-Zähler für Doppelsprung
   private int jumpCount = 0;
@@ -10,8 +11,8 @@ class Player extends GameObject {
 
   //NEU: Blickrichtung und Schuss-Cooldown
   private boolean facingRight = true;
-  private int shootCooldown = 0;
-  private int cooldownTime = 15;  //15 Frames Pause zwischen den Schüssen (~0.25 Sek)
+  private float shootCooldown = 0.f;
+  private float cooldownTime = 0.25f;  //0.25 Sekunden Pause statte Frame-Anzahl
 
   public Player(float startX, float startY) {
     super(startX, startY, 50.f, 50.f);
@@ -28,7 +29,7 @@ class Player extends GameObject {
     }
   }
 
-  //NEU: Schießen mit Blickrichtung und Cooldown
+  //Schießen mit Blickrichtung und Cooldown
   public void shoot(Bullet[] bullets) {
     if (shootCooldown > 0) return;  //Noch am Nachladen
 
@@ -36,11 +37,11 @@ class Player extends GameObject {
       if (bullets[i] == null || !bullets[i].isActive) {
         //Nach rechts schießen
         if (facingRight) {
-          bullets[i] = new Bullet(x + w, y + (h / 2.f) - 5.f, 10.f);
+          bullets[i] = new Bullet(x + w, y + (h / 2.f) - 5.f, 600.f);
         }
         //Nach links schießen
         else {
-          bullets[i] = new Bullet(x-10.f, y + (h / 2.f) - 5.f, -10.f);
+          bullets[i] = new Bullet(x-10.f, y + (h / 2.f) - 5.f, -600.f);
         }
         shootCooldown = cooldownTime; //Cooldown starten
         break;
@@ -48,33 +49,33 @@ class Player extends GameObject {
     }
   }
 
-  //Signatur erweiter um Bullet[] bullets
-  public void update(boolean left, boolean right, Platform[] platforms, Coin[] coins, Enemy[] enemies, FlyingEnemy[] flyers, Spike[] spikes, Bullet[] bullets, Goal goal) {
-    //NEU: Blickrichtung beim Laufen aktualisieren
+
+  public void update(boolean left, boolean right, Platform[] platforms, Coin[] coins, Enemy[] enemies, FlyingEnemy[] flyers, Spike[] spikes, Bullet[] bullets, Goal goal, float dt) {
+    //Horizontal mit dt bewegen
     if (left && x > 0) {
-      x-= speed;
+      x-= speed *dt;
       facingRight = false; //Schaut nach links
     }
     if (right) {
-      x += speed;
+      x += speed *dt;
       facingRight = true;  //Schaut nach rechts
     }
 
-    //NEU: Cooldown herunterzählen
+    //Cooldown herunterzählen
     if (shootCooldown > 0) {
-      shootCooldown--;
+      shootCooldown -= dt;
     }
 
-    //Sprung
-    velocityY += gravity;
-    y += velocityY;
+    //Gravitation und Veritkal-Bewegung mit dt
+    velocityY += gravity *dt;
+    y += velocityY *dt;
 
     //Plattform & Kollision (One-Way von oben)
     if (velocityY > 0) {
       for (int i = 0; i < platforms.length; i++) {
         Platform p = platforms[i];
         if (x + w > p.x && x < p.x + p.w) {
-          if (y + h >= p.y && y + h - velocityY <= p.y) {
+          if (y + h >= p.y && y + h - (velocityY * dt) <= p.y + 10.f) {
             y = p.y - h;
             velocityY = 0.f;
             jumpCount = 0; //Auf der Plattform landen setzt die Sprünge auf 0 zurück
@@ -92,11 +93,11 @@ class Player extends GameObject {
       }
     }
 
-    //Gegner-Kollision nutzt jetzt e.w und e.h aus GameObject
+    //Bodengegner
     for (int i = 0; i < enemies.length; i++) {
       Enemy e = enemies[i];
       if (e.isAlive && this.touches(e)) {
-        if (velocityY > 0 && (y + h - velocityY) <= e.y +15.f) {    //Denk drann Y steht aufm kopf, deshalb velocityY > 0 und  <= e.y + 15.f: Lag im letzten Frame noch über/auf der Oberkante des Gegners
+        if (velocityY > 0 && (y + h - (velocityY *dt)) <= e.y +15.f) {    //Denk drann Y steht aufm kopf, deshalb velocityY > 0 und  <= e.y + 15.f: Lag im letzten Frame noch über/auf der Oberkante des Gegners
           e.isAlive = false;
           velocityY = jumpStrength * 0.7f;
           score += 50;
@@ -113,7 +114,7 @@ class Player extends GameObject {
         }
       }
     }
-    //NEU: Fliegende Gegner vs. Player (Berührung = Verletzung, kein Kopfsprung)
+    // Fliegende Gegner vs. Player (Berührung = Verletzung, kein Kopfsprung)
     for (int i = 0; i < flyers.length; i++) {
       FlyingEnemy f  = flyers[i];
       if (f.isAlive && this.touches(f)) {

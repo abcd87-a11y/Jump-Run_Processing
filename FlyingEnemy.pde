@@ -1,5 +1,5 @@
 class FlyingEnemy extends GameObject {
-  float speed = 2.f;
+  float speed = 120.f;
   float topBound, bottomBound;      //Grenzen für die vertikale Bewegung
   boolean isAlive  = true;
 
@@ -9,11 +9,10 @@ class FlyingEnemy extends GameObject {
     this.bottomBound = bottomBound;
   }
 
-  public void update() {
+  public void update(float dt) {
     if (!isAlive) return;
     //Bewegung auf der Y-Achse
-    y +=speed;
-
+    y +=speed *dt;
     //Richtungswechsel an den Grenzen
     if (y < topBound || y + h > bottomBound) speed *= -1;
   }

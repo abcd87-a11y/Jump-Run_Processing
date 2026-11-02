@@ -17,6 +17,9 @@ boolean leftPressed = false;
 boolean rightPressed = false;
 float cameraX = 0.f;
 
+int lastTime = 0;
+float dt = 0.f;
+
 void setup() {
   size(800, 600);
   resetGame();    //Wir rufen einfach unsere Reset-Funktion auf!
@@ -74,8 +77,14 @@ void resetGame() {
 }
 
 void draw() {
+  //Delta Time in Sekunden berechnen
+  int currentTime = millis();
+  dt = (currentTime - lastTime) / 1000.f;
+  lastTime = currentTime;
+  //Schutz vor Ausreißen (z.B. beim Fenster-Moven oder Laden)
+  if(dt > 0.1f) dt = 0.1f;
+  
   background(135, 206, 235);
-
 
   if (gameState == 0) {    //Spielen
     //Normale SPIEL-Logik
@@ -91,22 +100,26 @@ void draw() {
     if (cameraX < 0) cameraX = 0;
 
     translate(-cameraX, 0);
-
-    player.update(leftPressed, rightPressed, platforms, coins, enemies, flyers, spikes, bullets, goal);
+    
+    //Player bekommt jetzt dt übergeben
+    player.update(leftPressed, rightPressed, platforms, coins, enemies, flyers, spikes, bullets, goal,dt);
     player.draw();
 
 
-    //Enemies
+    //Platform
     for (int i = 0; i < platforms.length; i++)  platforms[i].draw();
+    //Coins
     for (int i = 0; i < coins.length; i++) coins[i].draw();
+    
+    //Enemies
     for (int i = 0; i < enemies.length; i++) {
-      enemies[i].update();
+      enemies[i].update(dt);
       enemies[i].draw();
     }
 
     //Flying Enemies
     for (int i = 0; i < flyers.length; i++) {
-      flyers[i].update();
+      flyers[i].update(dt);
       flyers[i].draw();
     }
 
@@ -114,7 +127,7 @@ void draw() {
     //NEU: Bullets mit cameraX updaten
     for (int i = 0; i < bullets.length; i++) {
       if (bullets[i] != null) {
-        bullets[i].update(cameraX);  //cameraX wird mitgegeben
+        bullets[i].update(cameraX, dt);  //cameraX und dt wird mitgegeben
         bullets[i].draw();
       }
     }

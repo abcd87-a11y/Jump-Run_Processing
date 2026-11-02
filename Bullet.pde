@@ -9,10 +9,10 @@ class Bullet extends GameObject {
 
 
   //NEU: Nimmt cameraX entgegen, um den Bildschimrand korrekt zu prüfen
-  public void update(float cameraX) {
+  public void update(float cameraX, float dt) {
     if (!isActive) return;
 
-    x += speedX; //Kugel bewegt sich horizontal
+    x += speedX *dt; //Kugel bewegt sich horizontal
 
     //Kugel löschen, wenn sie links oder rechts aus dem sichtbaren Bild fliegt
     if (x > cameraX + width + 100 || x < cameraX - 100) isActive = false;

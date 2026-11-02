@@ -1,5 +1,5 @@
 class Enemy extends GameObject {
-  float speed = 2.f;  //Geschwindigkeit
+  float speed = 120.f;  //120 px/s
   float leftBound, rightBound;   //Patroullien-Grenzen
   boolean isAlive = true;
 
@@ -9,10 +9,10 @@ class Enemy extends GameObject {
     this.rightBound = rightBound;
   }
 
-  public void update() {
+  public void update(float dt) {
     if (!isAlive) return;
     //Bewegung nach links/rechts
-    x += speed;
+    x += speed *dt;
     //An den Grenzen die Richtung umkehren
     if (x < leftBound || x + w > rightBound) {
       speed *= -1;  //Kehrt das Vorzeichen um (aus +2 wird -2 und umgekehrt)
