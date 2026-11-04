@@ -25,16 +25,18 @@ class Player extends GameObject {
     return this.x;
   }
 
-  public void jump() {
+  public boolean jump() {
     if (jumpCount < maxJumps) {
       velocityY = jumpStrength;  //Impuls nach oben
-      jumpCount++;               //Zähler hochzählen (1 = BodenSprung, 2 = LuftSprung
+      jumpCount++;  //Zähler hochzählen (1 = BodenSprung, 2 = LuftSprung
+      return true;
     }
+    return false;
   }
 
   //Schießen mit Blickrichtung und Cooldown
-  public void shoot(Bullet[] bullets, PImage bulletImg) {
-    if (shootCooldown > 0) return;  //Noch am Nachladen
+  public boolean shoot(Bullet[] bullets, PImage bulletImg) {
+    if (shootCooldown > 0) return false;  //Noch am Nachladen
 
     for (int i = 0; i < bullets.length; i++) {
       if (bullets[i] == null || !bullets[i].isActive) {
@@ -47,13 +49,14 @@ class Player extends GameObject {
           bullets[i] = new Bullet(x-10.f, y + (h / 2.f) - 5.f, -600.f, bulletImg);
         }
         shootCooldown = cooldownTime; //Cooldown starten
-        break;
+        return true;
       }
     }
+    return false;
   }
 
 
-  public void update(boolean left, boolean right, Platform[] platforms, Coin[] coins, Enemy[] enemies, FlyingEnemy[] flyers, Spike[] spikes, Bullet[] bullets, Goal goal, float dt) {
+  public void update(boolean left, boolean right, Platform[] platforms, Coin[] coins, Enemy[] enemies, FlyingEnemy[] flyers, Spike[] spikes, Bullet[] bullets, Goal goal, float dt, processing.sound.SoundFile coinSound) {
     //Horizontal mit dt bewegen
     if (left && x > 0) {
       x-= speed *dt;
@@ -93,6 +96,7 @@ class Player extends GameObject {
       if (!c.isCollected && this.touches(c)) {
         c.isCollected = true;
         score += 10;
+        coinSound.play();
       }
     }
 
