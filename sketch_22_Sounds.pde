@@ -1,4 +1,6 @@
 //=== HAUPTPROGRAMM ===
+import processing.sound.*;
+
 Player player;
 Platform[] platforms = new Platform[6];  //(Bodenabschnitte + Plafformen)
 Coin[] coins = new Coin[5];
@@ -21,7 +23,8 @@ int lastTime = 0;
 float dt = 0.f;
 
 //Variable deklarieren
-PImage playerImg, coinImg, enemyImg,flyerImg, spikeImg, bulletImg, goalImg;
+PImage playerImg, coinImg, enemyImg, flyerImg, spikeImg, bulletImg, goalImg;
+SoundFile jumpSound, coinSound, shootSound;
 
 void setup() {
   size(800, 600);
@@ -32,7 +35,11 @@ void setup() {
   spikeImg = loadImage("spikes.png");
   bulletImg = loadImage("bullet.png");
   goalImg = loadImage("goal.png");
-  
+
+
+  jumpSound = new SoundFile(this, "jump.wav");
+  coinSound = new SoundFile(this, "coin.wav");
+  shootSound = new SoundFile(this, "shoot.wav");
   resetGame();    //Wir rufen einfach unsere Reset-Funktion auf!
 }
 
@@ -42,7 +49,7 @@ void resetGame() {
   lives = 3;
   gameState = 0;
   cameraX = 0.f;
-  
+
   //NEU: playerImg als Parameter an den Konstruktor übergeben
   player = new Player(100.f, height-100.f-50.f, playerImg);
 
@@ -94,8 +101,8 @@ void draw() {
   dt = (currentTime - lastTime) / 1000.f;
   lastTime = currentTime;
   //Schutz vor Ausreißen (z.B. beim Fenster-Moven oder Laden)
-  if(dt > 0.1f) dt = 0.1f;
-  
+  if (dt > 0.1f) dt = 0.1f;
+
   background(135, 206, 235);
 
   if (gameState == 0) {    //Spielen
@@ -112,9 +119,9 @@ void draw() {
     if (cameraX < 0) cameraX = 0;
 
     translate(-cameraX, 0);
-    
+
     //Player bekommt jetzt dt übergeben
-    player.update(leftPressed, rightPressed, platforms, coins, enemies, flyers, spikes, bullets, goal,dt);
+    player.update(leftPressed, rightPressed, platforms, coins, enemies, flyers, spikes, bullets, goal, dt, coinSound);
     player.draw();
 
 
@@ -122,7 +129,7 @@ void draw() {
     for (int i = 0; i < platforms.length; i++)  platforms[i].draw();
     //Coins
     for (int i = 0; i < coins.length; i++) coins[i].draw();
-    
+
     //Enemies
     for (int i = 0; i < enemies.length; i++) {
       enemies[i].update(dt);
@@ -201,10 +208,18 @@ void draw() {
 void keyPressed() {
   if (key == 'a' || key == 'A') leftPressed = true;
   if (key == 'd' || key == 'D') rightPressed = true;
-  if (key == ' ') player.jump();
+  if (key == ' ') {
+    if (player.jump()) {
+      jumpSound.play();
+    }
+  }
   if (key == 'r' || key == 'R') resetGame();
 
-  if (key =='f' || key == 'F') player.shoot(bullets, bulletImg);
+  if (key == 'f' || key == 'F') {
+    if (player.shoot(bullets, bulletImg)) {
+      shootSound.play();
+    }
+  }
 }
 
 void keyReleased() {

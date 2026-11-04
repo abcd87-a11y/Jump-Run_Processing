@@ -13,18 +13,11 @@ class Enemy extends GameObject {
 
   public void update(float dt) {
     if (!isAlive) return;
-
-    x += speed * dt; // Bewegung anwenden
-
-    // Check linke Grenze
-    if (x <= leftBound) {
-      x = leftBound;         // Harte Korrektur auf die Kante
-      speed = Math.abs(speed); // Garantiert positiv (nach rechts)
-    }
-    // Check rechte Grenze
-    else if (x + w >= rightBound) {
-      x = rightBound - w;    // Harte Korrektur auf die rechte Kante
-      speed = -Math.abs(speed); // Garantiert negativ (nach links)
+    //Bewegung nach links/rechts
+    x += speed *dt;
+    //An den Grenzen die Richtung umkehren
+    if (x < leftBound || x + w > rightBound) {
+      speed *= -1;  //Kehrt das Vorzeichen um (aus +2 wird -2 und umgekehrt)
     }
   }
 
