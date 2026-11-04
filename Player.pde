@@ -88,12 +88,15 @@ class Player extends GameObject {
       }
     }
 
+    //Münze
     for (int i = 0; i < coins.length; i++) {
       Coin c = coins[i];
       if (!c.isCollected && this.touches(c)) {
         c.isCollected = true;
         score += 10;
-        coinSound.play(); // NEU: Sound abspielen!
+        if (coinSound != null) coinSound.play(); //Sound abspielen!
+        //Gelbe Partikel in der Mitte der Münze
+        spawnParticles(c.x+c.w/2.f, c.y + c.h / 2.f, 255, 215, 0, 10);
       }
     }
 
@@ -105,6 +108,8 @@ class Player extends GameObject {
           e.isAlive = false;
           velocityY = jumpStrength * 0.7f;
           score += 50;
+          //Rote Partikel
+          spawnParticles(e.x+e.w /2.f, e.y+ e.h/2.f, 220, 20, 60, 15);
         } else {
           //Leben abziehen & Respawn / Game Over
           lives--;
@@ -143,12 +148,14 @@ class Player extends GameObject {
             e.isAlive = false;    //Gegner schalten wir aus
             b.isActive = false;   //Kugel verschwindet
             score += 50;
+            //Orangene Treffer-Partikel
+            spawnParticles(e.x + e.w / 2.f, e.y + e.h / 2.f, 255, 40, 0, 12);
           }
         }
       }
     }
 
-    //NEU: Projektile vs. fliegende Gegner
+    //Projektile vs. fliegende Gegner
     for (int i = 0; i < bullets.length; i++) {
       Bullet b = bullets[i];
       if (b != null && b.isActive) {
@@ -158,6 +165,8 @@ class Player extends GameObject {
             f.isAlive = false;
             b.isActive = false;
             score += 75;
+            //Violette Treffer-Partikel
+            spawnParticles(f.x + f.w / 2.f, f.y + f.h /2.f, 148, 0, 211, 12);
           }
         }
       }

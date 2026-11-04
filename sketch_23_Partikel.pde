@@ -9,6 +9,7 @@ FlyingEnemy[] flyers = new FlyingEnemy[1];    //NEU
 Spike[] spikes = new Spike[14];
 Bullet[] bullets = new Bullet[10];
 Goal goal;
+Particle[] particles = new Particle[50];
 
 int score = 0;
 int lives = 3;      //wir starten mir 3 Leben
@@ -89,9 +90,14 @@ void resetGame() {
     wert+= 30;
   }
 
-  //NEU: Alle Kugeln im Magazin zurücksetzen
+  //Alle Kugeln im Magazin zurücksetzen
   for (int i = 0; i < bullets.length; i++) {
     bullets[i] = null;
+  }
+
+  //Partikel-Array beim Reset leeren
+  for (int i = 0; i < particles.length; i++) {
+    particles[i] = null;
   }
 }
 
@@ -127,6 +133,15 @@ void draw() {
 
     //Platform
     for (int i = 0; i < platforms.length; i++)  platforms[i].draw();
+
+    //Partikel updaten und zeichnen
+    for (int i = 0; i < particles.length; i++) {
+      if (particles[i] !=  null && particles[i].isActive) {
+        particles[i].update(dt);
+        particles[i].draw();
+      }
+    }
+
     //Coins
     for (int i = 0; i < coins.length; i++) coins[i].draw();
 
@@ -143,7 +158,7 @@ void draw() {
     }
 
     //Abgefeuerte Projektile fliegen lassen und zeichnen
-    //NEU: Bullets mit cameraX updaten
+    //Bullets mit cameraX updaten
     for (int i = 0; i < bullets.length; i++) {
       if (bullets[i] != null) {
         bullets[i].update(cameraX, dt);  //cameraX und dt wird mitgegeben
@@ -225,4 +240,16 @@ void keyPressed() {
 void keyReleased() {
   if (key =='a' || key == 'A') leftPressed = false;
   if (key =='d' || key == 'D') rightPressed = false;
+}
+
+//Globale Hilfsfunktion: Spawnt 'count' Oartujek ab Position (x,y) mit Farbe (r,g,b)
+void spawnParticles(float x, float y, int r, int g, int b, int count) {
+  int spawned = 0;
+  for (int i = 0; i < particles.length; i++) {
+    if (particles[i] == null || !particles[i].isActive) {
+      particles[i] = new Particle(x, y, r, g, b);
+      spawned++;
+      if (spawned >= count) break;
+    }
+  }
 }

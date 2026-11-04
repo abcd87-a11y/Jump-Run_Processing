@@ -13,10 +13,19 @@ class FlyingEnemy extends GameObject {
 
   public void update(float dt) {
     if (!isAlive) return;
-    //Bewegung auf der Y-Achse
-    y +=speed *dt;
-    //Richtungswechsel an den Grenzen
-    if (y < topBound || y + h > bottomBound) speed *= -1;
+    
+    y += speed * dt; // Bewegung anwenden
+
+    // Check obere Grenze
+    if (y <= topBound) {
+      y = topBound;          // Harte Korrektur
+      speed = Math.abs(speed); // Nach unten fliegen
+    } 
+    // Check untere Grenze
+    else if (y + h >= bottomBound) {
+      y = bottomBound - h;   // Harte Korrektur
+      speed = -Math.abs(speed); // Nach oben fliegen
+    }
   }
 
   public void draw() {
