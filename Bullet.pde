@@ -1,14 +1,15 @@
 class Bullet extends GameObject {
-  float speedX = 10.f; //Positiv nach rechts, Negativ nach links
+  float speedX = 600.f; //Positiv nach rechts, Negativ nach links
   boolean isActive = true;
+  private PImage img;
 
-  public Bullet(float startX, float startY, float speedX) {
+  public Bullet(float startX, float startY, float speedX, PImage img) {
     super(startX, startY, 10.f, 10.f);
     this.speedX = speedX;
+    this.img = img;
   }
 
-
-  //NEU: Nimmt cameraX entgegen, um den Bildschimrand korrekt zu prüfen
+  // Nimmt cameraX entgegen, um den Bildschimrand korrekt zu prüfen
   public void update(float cameraX, float dt) {
     if (!isActive) return;
 
@@ -20,8 +21,12 @@ class Bullet extends GameObject {
 
   public void draw() {
     if (isActive) {
-      fill(255, 140, 0);
-      rect(x, y, w, h);
+      if (img != null) {
+        image(img, x, y, w, h);
+      } else {
+        fill(255, 140, 0);
+        rect(x, y, w, h);
+      }
     }
   }
 }

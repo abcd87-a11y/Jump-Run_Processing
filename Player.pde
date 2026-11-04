@@ -33,18 +33,18 @@ class Player extends GameObject {
   }
 
   //Schießen mit Blickrichtung und Cooldown
-  public void shoot(Bullet[] bullets) {
+  public void shoot(Bullet[] bullets, PImage bulletImg) {
     if (shootCooldown > 0) return;  //Noch am Nachladen
 
     for (int i = 0; i < bullets.length; i++) {
       if (bullets[i] == null || !bullets[i].isActive) {
         //Nach rechts schießen
         if (facingRight) {
-          bullets[i] = new Bullet(x + w, y + (h / 2.f) - 5.f, 600.f);
+          bullets[i] = new Bullet(x + w, y + (h / 2.f) - 5.f, 600.f, bulletImg);
         }
         //Nach links schießen
         else {
-          bullets[i] = new Bullet(x-10.f, y + (h / 2.f) - 5.f, -600.f);
+          bullets[i] = new Bullet(x-10.f, y + (h / 2.f) - 5.f, -600.f, bulletImg);
         }
         shootCooldown = cooldownTime; //Cooldown starten
         break;

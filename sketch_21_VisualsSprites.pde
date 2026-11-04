@@ -21,11 +21,18 @@ int lastTime = 0;
 float dt = 0.f;
 
 //Variable deklarieren
-PImage playerImg;
+PImage playerImg, coinImg, enemyImg,flyerImg, spikeImg, bulletImg, goalImg;
 
 void setup() {
   size(800, 600);
   playerImg = loadImage("player.png");
+  coinImg = loadImage("coin.png");
+  enemyImg = loadImage("enemy.png");
+  flyerImg = loadImage("flyer.png");
+  spikeImg = loadImage("spikes.png");
+  bulletImg = loadImage("bullet.png");
+  goalImg = loadImage("goal.png");
+  
   resetGame();    //Wir rufen einfach unsere Reset-Funktion auf!
 }
 
@@ -50,28 +57,28 @@ void resetGame() {
   platforms[5] = new Platform(900.f, 200.f, 150.f, 20.f);
 
   //Coins
-  coins[0] = new Coin(350.f, 360.f);
-  coins[1] = new Coin(650.f, 260.f);
-  coins[2] = new Coin(950.f, 160.f);
-  coins[3] = new Coin(1200.f, 460.f);  //Auf dem Boden
-  coins[4] = new Coin(1300.f, 460.f);
+  coins[0] = new Coin(350.f, 360.f, coinImg);
+  coins[1] = new Coin(650.f, 260.f, coinImg);
+  coins[2] = new Coin(950.f, 160.f, coinImg);
+  coins[3] = new Coin(1200.f, 460.f, coinImg);  //Auf dem Boden
+  coins[4] = new Coin(1300.f, 460.f, coinImg);
 
   //Gegner
-  enemies[0] = new Enemy(750.f, groundY - 40.f, 700.f, 1300.f);  //(X. Y, linkeGrenzen, rechteGrenzen)
-  enemies[1] = new Enemy(320.f, 400.f-40.f, 300.f, 450.f);
+  enemies[0] = new Enemy(750.f, groundY - 40.f, 700.f, 1300.f, enemyImg);  //(X. Y, linkeGrenzen, rechteGrenzen)
+  enemies[1] = new Enemy(310.f, 400.f-40.f, 300.f, 450.f, enemyImg);
 
   //NEU Fliegende Gegner in der Luft platzieren (fliegt zwischen Y = 150 und Y = 350)
-  flyers[0] = new FlyingEnemy(1100.f, 250.f, 150.f, 350.f);
+  flyers[0] = new FlyingEnemy(1100.f, 250.f, 150.f, 350.f, flyerImg);
 
   //Ziel
-  goal = new Goal(2500.f, groundY  - 100.f);
+  goal = new Goal(2500.f, groundY  - 100.f, goalImg);
 
   //Spikes
-  spikes[0] = new Spike(400.f, groundY - 30.f);    //Stachel auf dem ersten Boden
-  spikes[1] = new Spike(700.f, 300.f -30.f);       //Zweite auf ersten Block
+  spikes[0] = new Spike(400.f, groundY - 30.f, spikeImg);    //Stachel auf dem ersten Boden
+  spikes[1] = new Spike(700.f, 300.f -30.f, spikeImg);       //Zweite auf ersten Block
   float wert = 30.f;
   for (int i = 2; i <14; i++) {
-    spikes[i] = new Spike(2500.f+wert, groundY -30.f);       //Hinter dem Ziel
+    spikes[i] = new Spike(2500.f+wert, groundY -30.f, spikeImg);       //Hinter dem Ziel
     wert+= 30;
   }
 
@@ -197,7 +204,7 @@ void keyPressed() {
   if (key == ' ') player.jump();
   if (key == 'r' || key == 'R') resetGame();
 
-  if (key =='f' || key == 'F') player.shoot(bullets);
+  if (key =='f' || key == 'F') player.shoot(bullets, bulletImg);
 }
 
 void keyReleased() {

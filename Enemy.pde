@@ -2,11 +2,13 @@ class Enemy extends GameObject {
   float speed = 120.f;  //120 px/s
   float leftBound, rightBound;   //Patroullien-Grenzen
   boolean isAlive = true;
+  private PImage img;
 
-  public Enemy(float x, float y, float leftBound, float rightBound) {
+  public Enemy(float x, float y, float leftBound, float rightBound, PImage img) {
     super(x, y, 40.f, 40.f);
     this.leftBound = leftBound;
     this.rightBound = rightBound;
+    this.img = img;
   }
 
   public void update(float dt) {
@@ -21,8 +23,12 @@ class Enemy extends GameObject {
 
   public void draw() {
     if (isAlive) {
-      fill(200, 20, 60); //Knalliges Rot
-      rect(x, y, w, h);
+      if (img != null) {
+        image(img, x, y, w, h);
+      } else {
+        fill(200, 20, 60); //Knalliges Rot
+        rect(x, y, w, h);
+      }
     }
   }
 }
