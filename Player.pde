@@ -14,8 +14,11 @@ class Player extends GameObject {
   private float shootCooldown = 0.f;
   private float cooldownTime = 0.25f;  //0.25 Sekunden Pause statte Frame-Anzahl
 
-  public Player(float startX, float startY) {
+  private PImage img;  //NEU: Variable für das Spieler-Bild
+
+  public Player(float startX, float startY, PImage img) {
     super(startX, startY, 50.f, 50.f);
+    this.img = img;
   }
 
   public float getXPos() {
@@ -193,8 +196,13 @@ class Player extends GameObject {
     if (this.touches(goal)) gameState = 1;
   }
 
+  //NEU: draw()-Methode mit Bild-Untersützung
   public void draw() {
-    fill(255);
-    rect(x, y, w, h);
+    if (img != null) {
+      image(img, x, y, w, h);
+    } else {
+      fill(255);
+      rect(x, y, w, h);
+    }
   }
 }

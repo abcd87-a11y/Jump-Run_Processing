@@ -20,8 +20,12 @@ float cameraX = 0.f;
 int lastTime = 0;
 float dt = 0.f;
 
+//Variable deklarieren
+PImage playerImg;
+
 void setup() {
   size(800, 600);
+  playerImg = loadImage("player.png");
   resetGame();    //Wir rufen einfach unsere Reset-Funktion auf!
 }
 
@@ -31,8 +35,9 @@ void resetGame() {
   lives = 3;
   gameState = 0;
   cameraX = 0.f;
-
-  player = new Player(100.f, height-100.f-50.f);
+  
+  //NEU: playerImg als Parameter an den Konstruktor übergeben
+  player = new Player(100.f, height-100.f-50.f, playerImg);
 
   //BODENSEGMENTE (mit Lücken dazwischen)
   platforms[0] = new Platform(0.f, groundY, 500.f, height-groundY);
