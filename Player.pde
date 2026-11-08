@@ -110,9 +110,11 @@ class Player extends GameObject {
           score += 50;
           //Rote Partikel
           spawnParticles(e.x+e.w /2.f, e.y+ e.h/2.f, 220, 20, 60, 15);
+          triggerShake(0.15f, 5.f);  //Mittleres Wackeln
         } else {
           //Leben abziehen & Respawn / Game Over
           lives--;
+          triggerShake(0.3f, 10.f);  //Heftiges Wackel bei Treffer!
           if (lives <= 0) {
             gameState = 2;  //Game Over!
           } else {
@@ -128,6 +130,7 @@ class Player extends GameObject {
       FlyingEnemy f  = flyers[i];
       if (f.isAlive && this.touches(f)) {
         lives--;
+        triggerShake(0.3f, 10.f);
         if (lives <= 0) {
           gameState = 2;  //Game Over
         } else {
@@ -178,6 +181,7 @@ class Player extends GameObject {
       if (this.touches(s)) {
         //Treffer Leben abziehen und Respawn
         lives--;
+        triggerShake(0.3f, 10.f);
         if (lives <= 0) {
           gameState = 2;  //Game over
         } else {

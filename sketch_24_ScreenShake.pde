@@ -27,6 +27,9 @@ float dt = 0.f;
 PImage playerImg, coinImg, enemyImg, flyerImg, spikeImg, bulletImg, goalImg;
 SoundFile jumpSound, coinSound, shootSound;
 
+float shakeTime = 0.f;
+float shakeIntensity = 0.f;
+
 void setup() {
   size(800, 600);
   playerImg = loadImage("player.png");
@@ -124,7 +127,20 @@ void draw() {
     }
     if (cameraX < 0) cameraX = 0;
 
-    translate(-cameraX, 0);
+    //Shake-Timer herunterzählen und Offset berechnen
+    float shakeX = 0.f;
+    float shakeY = 0.f;
+
+    if (shakeTime > 0) {
+      shakeTime -= dt;
+      shakeX = random(-shakeIntensity, shakeIntensity);
+      shakeY = random(-shakeIntensity, shakeIntensity);
+    }
+
+    //Kamera inklusive Shake übersetzen
+    translate(-cameraX +shakeX, shakeY);
+
+
 
     //Player bekommt jetzt dt übergeben
     player.update(leftPressed, rightPressed, platforms, coins, enemies, flyers, spikes, bullets, goal, dt, coinSound);
@@ -232,7 +248,8 @@ void keyPressed() {
 
   if (key == 'f' || key == 'F') {
     if (player.shoot(bullets, bulletImg)) {
-      shootSound.play();
+      if(shootSound != null) shootSound.play();
+      triggerShake(0.1f, 3.0f);  //leichtes Wackeln für 0.1Sekunde
     }
   }
 }
@@ -252,4 +269,9 @@ void spawnParticles(float x, float y, int r, int g, int b, int count) {
       if (spawned >= count) break;
     }
   }
+}
+
+void triggerShake(float duration, float intensity) {
+  shakeTime = duration;
+  shakeIntensity = intensity;
 }
