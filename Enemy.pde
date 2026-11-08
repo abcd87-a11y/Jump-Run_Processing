@@ -20,7 +20,7 @@ class Enemy extends GameObject {
     if (x <= leftBound) {
       x = leftBound;         // Harte Korrektur auf die Kante
       speed = Math.abs(speed); // Garantiert positiv (nach rechts)
-    }
+    } 
     // Check rechte Grenze
     else if (x + w >= rightBound) {
       x = rightBound - w;    // Harte Korrektur auf die rechte Kante
